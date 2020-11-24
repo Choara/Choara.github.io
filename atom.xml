@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://choara.github.io</id>
+    <title>choara&apos;s blog</title>
+    <updated>2020-11-24T14:58:02.942Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://choara.github.io"/>
+    <link rel="self" href="https://choara.github.io/atom.xml"/>
+    <subtitle>心有猛虎 细嗅蔷薇</subtitle>
+    <logo>https://choara.github.io/images/avatar.png</logo>
+    <icon>https://choara.github.io/favicon.ico</icon>
+    <rights>All rights reserved 2020, choara&apos;s blog</rights>
+</feed>
