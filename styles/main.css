@@ -2082,7 +2082,13 @@ body {
         width: 960px;
         margin: 0 auto;
       }
-    body {
+    @font-face {
+      font-family: 'Consolas-with-Yahei Nerd Font';
+      src: url('/media/fonts/Consolas-with-Yahei Nerd Font.ttf');
+    }
+    * {
+        font-family: 'Consolas-with-Yahei Nerd Font';
+    }body {
       color: #555;
     }
     .next-md-body {

@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://choara.github.io</id>
     <title>choara&apos;s blog</title>
-    <updated>2020-11-30T00:16:57.113Z</updated>
+    <updated>2020-12-01T11:01:14.548Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://choara.github.io"/>
     <link rel="self" href="https://choara.github.io/atom.xml"/>
@@ -11,264 +11,227 @@
     <icon>https://choara.github.io/favicon.ico</icon>
     <rights>All rights reserved 2020, choara&apos;s blog</rights>
     <entry>
-        <title type="html"><![CDATA[Spark Checkpoint]]></title>
-        <id>https://choara.github.io/post/spark-checkpoint/</id>
-        <link href="https://choara.github.io/post/spark-checkpoint/">
+        <title type="html"><![CDATA[Java 中的自动拆装箱]]></title>
+        <id>https://choara.github.io/post/java-zhong-de-zi-dong-chai-zhuang-xiang/</id>
+        <link href="https://choara.github.io/post/java-zhong-de-zi-dong-chai-zhuang-xiang/">
         </link>
-        <updated>2020-11-30T00:11:34.000Z</updated>
-        <content type="html"><![CDATA[<h2 id="checkpoint">CheckPoint</h2>
-<p>Spark离线计算中通过checkpoint缓存RDD数据，切断过长的Lineage，任务失败不用重新从源头计算，直接从checkpoint恢复。checkpoint会重新起个任务进行计算存储，因为spark DAG的机制，不会保存中间状态的数据，所以checkpoint前建议cache，将对应的结果缓存到内存或磁盘中，直接从cache中持久化。</p>
-<p>Spark流式计算中存储两类数据，元数据：1. 配置-创建流应用程序的配置。2. DStream操作-DStream操作集。3. 数据batch-接收但未完成的批次。数据：流处理中有窗口或状态操作，根据窗口长度、checkpoint时间点需要对历史数据进行存储，存储只保留 最近几个必要的时间点。</p>
-<p>离线和实时的区别在于离线只存储了数据，用于在计算中某个计算失败数据丢失，可以从checkpoint点重新开始计算。实时可以从checkpoint中恢复任务，除了已完成的数据、未完成的数据，还存储了应用程序的配置、对数据流的操作，合适的 checkpoint 能在保证吞吐降低不多（checkpoint另起一个任务将数据持久化）的情况下保证程序的稳定，DStream 5-10 个滑动间隔是合适的。</p>
-<h3 id="源码">源码</h3>
-<pre><code class="language-scala">// 定义 checkpointDir
-private[spark] var checkpointDir: Option[String] = None
+        <updated>2020-12-01T06:09:18.000Z</updated>
+        <content type="html"><![CDATA[<p>Java 1.5开始引入自动装箱（Autoboxing）和拆箱（Unboxing），目的是将原始类型值自动转换为对应的包装类的对象，编译器在编译的时候自动完成转换，转换过程对外透明。</p>
+<h3 id="基本数据类型">基本数据类型</h3>
+<table>
+<thead>
+<tr>
+<th>基础类型</th>
+<th>包装类</th>
+<th>取值范围</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>byte</td>
+<td>Byte</td>
+<td>2^7 -128 ~ 127 首字母表示正负，以下同上</td>
+</tr>
+<tr>
+<td>short</td>
+<td>Short</td>
+<td>2^15 -32786 ~ 32767</td>
+</tr>
+<tr>
+<td>int</td>
+<td>Integer</td>
+<td>2^31 -2147483648~2147483647</td>
+</tr>
+<tr>
+<td>long</td>
+<td>Long</td>
+<td>2^63 -9223372036854774808~9223372036854774807</td>
+</tr>
+<tr>
+<td>boolean</td>
+<td>Boolean</td>
+<td>true、false</td>
+</tr>
+<tr>
+<td>char</td>
+<td>Character</td>
+<td>\u0000~\uFFFF</td>
+</tr>
+<tr>
+<td>float</td>
+<td>Float</td>
+<td>3.402823e+38 ~ 1.401298e-45</td>
+</tr>
+<tr>
+<td>double</td>
+<td>Double</td>
+<td>1.797693e+308~ 4.9000000e-324</td>
+</tr>
+</tbody>
+</table>
+<h3 id="基本数据类型有什么好处">基本数据类型有什么好处</h3>
+<p>Java是面向对象的编程语言，对象需要通过new创建，但是对于常用的类型，每次使用new一个对象，操作太麻烦。所以提供了基础类型，不用使用new创建，直接在栈内存中存储而不是引用堆内存，简洁高效。</p>
+<h3 id="包装类有什么好处">包装类有什么好处</h3>
+<p>Java是面向对象的编程语言，在常用操作中，比如容器Set、List等，只支持对对象进行操作，为了让基本类型也具有对象的特征，就出现了包装类型，它相当于将基本类型 “包装起来”，使得它具有了对象的性质，并且为其添加了属性和方法，丰富了基本类型的操作。</p>
+<h3 id="自动拆箱与装箱">自动拆箱与装箱</h3>
+<p>基本数据类型和包装类之间需要进行转换，把基本数据类型转换成包装类的过程就是打包（boxing），中文翻译为装箱。</p>
+<p>反之，把包装类转换成基本数据类型的过程就是拆包（unboxing），中文翻译为拆箱。</p>
+<p>在 Java SE5 之前，要进行装箱，可以通过以下代码：</p>
+<pre><code class="language-java">// 装箱
+Integer i = new Integer(1);
+//拆箱
+int j = i.intValue();
+</code></pre>
+<p>自动拆装箱就是把这个过程自动话了，java自动帮你实现这个过程，其他类型类似</p>
+<pre><code class="language-java">Integer i=Integer.valueOf(1); // 装箱
+int j=integer.intValue(); // 拆箱
+</code></pre>
+<h4 id="场景">场景</h4>
+<pre><code class="language-java">// 赋值给包装器类型的变量
+Integer i = 1; // autoboxing
+int i_value = i; // unboxing
 
+// 传递基本类型到集合类中
+List&lt;Integer&gt; list = new ArrayList&lt;&gt;();
+list.add(1); // list.add(Integer.valueOf(1)) autoboxing
+int index_zero = list.get(0); // unboxing
+
+// 比大小
+Integer i = 1;
+i == 1; // a.intValue() == 1; unboxing
+
+// 运算
+Integer i = 1;
+Integer j = 2;
+int k = i+j; // k = i.intValue() + j.intValue();我们发现，两个包装类型之间的运算，会被自动拆箱成基本类型进行。
+
+// 函数
+Integer get(Integer i){
+	return i;
+}
+get(1);
+Integer get(int i){
+	return i;
+}
+Integer i = 1;
+get(i);
+
+// 相同类型的赋值
+int i = 1;
+Integer j = 2;
+int r = true?i:j; // r = true?i:j.intValue();
+</code></pre>
+<h4 id="自动拆装箱与缓存">自动拆装箱与缓存</h4>
+<pre><code class="language-java">public static void main(String... strings) {
+
+    Integer integer1 = 3;
+    Integer integer2 = 3;
+
+    if (integer1 == integer2)
+        System.out.println(&quot;integer1 == integer2&quot;);
+    else
+        System.out.println(&quot;integer1 != integer2&quot;);
+
+    Integer integer3 = 300;
+    Integer integer4 = 300;
+
+    if (integer3 == integer4)
+        System.out.println(&quot;integer3 == integer4&quot;);
+    else
+        System.out.println(&quot;integer3 != integer4&quot;);
+
+}
+</code></pre>
+<p>在 Java 中，== 比较的是对象应用，而 equals 比较的是值。</p>
+<p>所以，在这个例子中，不同的对象有不同的引用，所以在进行比较的时候都将返回 false。奇怪的是，这里两个类似的 if 条件判断返回不同的布尔值。</p>
+<p>上面这段代码真正的输出结果：</p>
+<pre><code class="language-java">integer1 == integer2
+integer3 != integer4
+</code></pre>
+<p>**原因就和 Integer 中的缓存机制有关。**在 Java 5 中，在 Integer 的操作上引入了一个新功能来节省内存和提高性能。整型对象通过使用相同的对象引用实现了缓存和重用。</p>
+<blockquote>
+<p>适用于整数值区间 - 128 至 +127。</p>
+<p>只适用于自动装箱。使用构造函数创建对象不适用。</p>
+</blockquote>
+<h4 id="integercache">IntegerCache</h4>
+<pre><code class="language-java">// valueOf()
+public static Integer valueOf(int i) {
+    if (i &gt;= IntegerCache.low &amp;&amp; i &lt;= IntegerCache.high)    
+        return IntegerCache.cache[i + (-IntegerCache.low)];
+    return new Integer(i);
+}
+
+// IntegerCache
 /**
- * Set the directory under which RDDs are going to be checkpointed. The directory must
- * be a HDFS path if running on a cluster.
- */
-def setCheckpointDir(directory: String) {
+     * Cache to support the object identity semantics of autoboxing for values between
+     * -128 and 127 (inclusive) as required by JLS.
+     *
+     * The cache is initialized on first usage.  The size of the cache
+     * may be controlled by the {@code -XX:AutoBoxCacheMax=&lt;size&gt;} option.
+     * During VM initialization, java.lang.Integer.IntegerCache.high property
+     * may be set and saved in the private system properties in the
+     * sun.misc.VM class.
+     */
 
-  // If we are running on a cluster, log a warning if the directory is local.
-  // Otherwise, the driver may attempt to reconstruct the checkpointed RDD from
-  // its own local file system, which is incorrect because the checkpoint files
-  // are actually on the executor machines.
-  // 如果运行的是 cluster 模式，当设置本地文件夹的时候，会报 warning
-  // 道理很简单，被创建出来的文件夹路径实际上是 executor 本地的文件夹路径，不是不行，
-  // 只是有点不合理，Checkpoint 的东西最好还是放在分布式的文件系统中
-  if (!isLocal &amp;&amp; Utils.nonLocalPaths(directory).isEmpty) {
-    logWarning(&quot;Spark is not running in local mode, therefore the checkpoint directory &quot; +
-      s&quot;must not be on the local filesystem. Directory '$directory' &quot; +
-      &quot;appears to be on the local filesystem.&quot;)
-  }
+    private static class IntegerCache {
+        static final int low = -128;
+        static final int high;
+        static final Integer cache[];
 
-  checkpointDir = Option(directory).map { dir =&gt;
-    // 显然文件夹名就是 UUID.randoUUID() 生成的
-    val path = new Path(dir, UUID.randomUUID().toString)
-    val fs = path.getFileSystem(hadoopConfiguration)
-    fs.mkdirs(path)
-    fs.getFileStatus(path).getPath.toString
-  }
-}
-</code></pre>
-<p><code>setCheckpointDir</code> 被那些类调用了。除了常见的 <code>StreamingContext</code> 中需要使用（因为容错性是流式计算的基本保证），另外的就是一些需要反复迭代计算使用 RDD 的场景，包括各种机器学习算法的时候，图中可以看到像 ALS, Decision Tree 等等算法，这些算法往往需要反复使用 RDD，遇到大的数据集用 Cache 就没有什么意义了，所以一般会用 Checkpoint。</p>
-<p><code>runJob</code> 方法的最后是一个 <code>rdd.toCheckPoint()</code> 的使用。<code>runJob</code> 是触发 action 的方法。</p>
-<pre><code class="language-scala">/**
- * Run a function on a given set of partitions in an RDD and pass the results to the given
- * handler function. This is the main entry point for all actions in Spark.
- */
-def runJob[T, U: ClassTag](
-    rdd: RDD[T],
-    func: (TaskContext, Iterator[T]) =&gt; U,
-    partitions: Seq[Int],
-    resultHandler: (Int, U) =&gt; Unit): Unit = {
-  if (stopped.get()) {
-    throw new IllegalStateException(&quot;SparkContext has been shutdown&quot;)
-  }
-  val callSite = getCallSite
-  val cleanedFunc = clean(func)
-  logInfo(&quot;Starting job: &quot; + callSite.shortForm)
-  if (conf.getBoolean(&quot;spark.logLineage&quot;, false)) {
-    logInfo(&quot;RDD's recursive dependencies:\n&quot; + rdd.toDebugString)
-  }
-  dagScheduler.runJob(rdd, cleanedFunc, partitions, callSite, resultHandler, localProperties.get)
-  progressBar.foreach(_.finishAll())
-  rdd.doCheckpoint()
-}
-</code></pre>
-<p><code>doCheckpoint()</code> 是 <code>RDD</code> 的私有方法，到底是 <code>Checkpoint</code> 什么。答案就是 RDD。</p>
-<pre><code class="language-scala">/**
- * Performs the checkpointing of this RDD by saving this. It is called after a job using this RDD
- * has completed (therefore the RDD has been materialized and potentially stored in memory).
- * doCheckpoint() is called recursively on the parent RDDs.
- */
-// 显然 checkpoint 是在使用完前一个 RDD 之后才会被执行的操作
-private[spark] def doCheckpoint(): Unit = {
-  RDDOperationScope.withScope(sc, &quot;checkpoint&quot;, allowNesting = false, ignoreParent = true) {
-    if (!doCheckpointCalled) {
-      doCheckpointCalled = true
-      if (checkpointData.isDefined) {
-        if (checkpointAllMarkedAncestors) {
-          // TODO We can collect all the RDDs that needs to be checkpointed, and then checkpoint
-          // them in parallel.
-          // Checkpoint parents first because our lineage will be truncated after we
-          // checkpoint ourselves
-          dependencies.foreach(_.rdd.doCheckpoint())
+        static {
+            // high value may be configured by property
+            int h = 127;
+            String integerCacheHighPropValue =
+                sun.misc.VM.getSavedProperty(&quot;java.lang.Integer.IntegerCache.high&quot;);
+            if (integerCacheHighPropValue != null) {
+                try {
+                    int i = parseInt(integerCacheHighPropValue);
+                    i = Math.max(i, 127);
+                    // Maximum array size is Integer.MAX_VALUE
+                    h = Math.min(i, Integer.MAX_VALUE - (-low) -1);
+                } catch( NumberFormatException nfe) {
+                    // If the property cannot be parsed into an int, ignore it.
+                }
+            }
+            high = h;
+
+            cache = new Integer[(high - low) + 1];
+            int j = low;
+            for(int k = 0; k &lt; cache.length; k++)
+                cache[k] = new Integer(j++);
+
+            // range [-128, 127] must be interned (JLS7 5.1.7)
+            assert IntegerCache.high &gt;= 127;
         }
-        checkpointData.get.checkpoint()
-      } else {
-        dependencies.foreach(_.rdd.doCheckpoint())
-      }
+
+        private IntegerCache() {}
     }
-  }
-}
 </code></pre>
-<p>上面代码可以看到，需要判断一下一个变量 <code>checkpointData</code> 是否为空。那么它是这么被定义的。</p>
-<pre><code class="language-scala">private[spark] var checkpointData: Option[RDDCheckpointData[T]] = None
+<p>IntegerCache是Integer内部静态类，JVM启动后自动加载static int low、high、cache[]，进行自动装箱时，如果数字在 - 128 至 127 之间时，会直接使用缓存中的对象，而不是重新创建一个对象。</p>
+<p>其中的 javadoc 详细的说明了缓存支持 - 128 到 127 之间的自动装箱过程。最大值 127 可以通过<code>-XX:AutoBoxCacheMax=size</code>修改。</p>
+<p>在 Boxing Conversion 部分的 Java 语言规范 (JLS) 规定如下：</p>
+<p>如果一个变量 p 的值是：</p>
+<pre><code class="language-shell">-128至127之间的整数(§3.10.1)
+true 和 false的布尔值 (§3.10.3)
+‘\u0000’至 ‘\u007f’之间的字符(§3.10.4)
 </code></pre>
-<p>然后看看 <code>RDDCheckPointData</code> 是个什么样的数据结构。</p>
-<pre><code class="language-scala">/**
- * This class contains all the information related to RDD checkpointing. Each instance of this
- * class is associated with an RDD. It manages process of checkpointing of the associated RDD,
- * as well as, manages the post-checkpoint state by providing the updated partitions,
- * iterator and preferred locations of the checkpointed RDD.
- */
-private[spark] abstract class RDDCheckpointData[T: ClassTag](@transient private val rdd: RDD[T])
-  extends Serializable {
-  import CheckpointState._
-  // The checkpoint state of the associated RDD.
-  protected var cpState = Initialized
-  // The RDD that contains our checkpointed data
-  // 显然，这个就是被 Checkpoint 的 RDD 的数据
-  private var cpRDD: Option[CheckpointRDD[T]] = None
-  // TODO: are we sure we need to use a global lock in the following methods?
-  /**
-   * Return whether the checkpoint data for this RDD is already persisted.
-   */
-  def isCheckpointed: Boolean = RDDCheckpointData.synchronized {
-    cpState == Checkpointed
-  }
-  /**
-   * Materialize this RDD and persist its content.
-   * This is called immediately after the first action invoked on this RDD has completed.
-   */
-  final def checkpoint(): Unit = {
-    // Guard against multiple threads checkpointing the same RDD by
-    // atomically flipping the state of this RDDCheckpointData
-    RDDCheckpointData.synchronized {
-      if (cpState == Initialized) {
-        cpState = CheckpointingInProgress
-      } else {
-        return
-      }
-    }
-    val newRDD = doCheckpoint()
-    // Update our state and truncate the RDD lineage
-    // 可以看到 cpRDD 在此处被赋值，通过 newRDD 来生成，而生成的方法是 doCheckpointa()
-    RDDCheckpointData.synchronized {
-      cpRDD = Some(newRDD)
-      cpState = Checkpointed
-      rdd.markCheckpointed()
-    }
-  }
-  /**
-   * Materialize this RDD and persist its content.
-   *
-   * Subclasses should override this method to define custom checkpointing behavior.
-   * @return the checkpoint RDD created in the process.
-   */
-   // 这个是 Checkpoint RDD 的抽象方法
-  protected def doCheckpoint(): CheckpointRDD[T]
-  /**
-   * Return the RDD that contains our checkpointed data.
-   * This is only defined if the checkpoint state is `Checkpointed`.
-   */
-  def checkpointRDD: Option[CheckpointRDD[T]] = RDDCheckpointData.synchronized { cpRDD }
-  /**
-   * Return the partitions of the resulting checkpoint RDD.
-   * For tests only.
-   */
-  def getPartitions: Array[Partition] = RDDCheckpointData.synchronized {
-    cpRDD.map(_.partitions).getOrElse { Array.empty }
-  }
-}
-</code></pre>
-<p>根据注释，可以知道这个类涵盖了 RDD Checkpoint 的所有信息。除了控制 Checkpoint 的过程，还会处理之后的状态变更。</p>
-<pre><code class="language-scala">/**
- * Enumeration to manage state transitions of an RDD through checkpointing
- *
- * [ Initialized --{@literal &gt;} checkpointing in progress --{@literal &gt;} checkpointed ]
- */
-private[spark] object CheckpointState extends Enumeration {
-  type CheckpointState = Value
-  val Initialized, CheckpointingInProgress, Checkpointed = Value
-}
-</code></pre>
-<p>显然 Checkpoint 的过程分为初始化[Initialized] -&gt; 正在 Checkpoint[CheckpointingInProgress] -&gt; 结束 Checkpoint[Checkpointed] 三种状态。</p>
-<p>关于 <code>RDDCheckpointData</code> 有两个实现，分别分析一下。</p>
-<ol>
-<li>LocalRDDCheckpointData: RDD 会被保存到 Executor 本地文件系统中，以减少保存到分布式容错性文件系统的巨额开销，因此 Local 形式的 Checkpoint 是基于持久化来做的，没有写到外部分布式文件系统。</li>
-<li>ReliableRDDCheckpointData: Reliable 很好理解，就是把 RDD Checkpoint 到可依赖的文件系统，言下之意就是 Driver 重启的时候也可以从失败的时间点进行恢复，无需再走一次 RDD 的转换过程。</li>
-</ol>
-<h4 id="localrddcheckpointdata">LocalRDDCheckpointData</h4>
-<p>LocalRDDCheckpointData 中的核心方法 <code>doCheckpoint()</code>。需要保证 RDD 用了 <code>useDisk</code> 级别的持久化。需要运行一个 Spark 任务来重新构建这个 RDD。最终 new 一个 LocalCheckpointRDD 实例。</p>
-<pre><code class="language-scala">......
-/**
- * Ensure the RDD is fully cached so the partitions can be recovered later.
- */
-protected override def doCheckpoint(): CheckpointRDD[T] = {
-  val level = rdd.getStorageLevel
+<p>范围内的时，将 p 包装成 a 和 b 两个对象时，可以直接使用 a==b 判断 a 和 b 的值是否相等。</p>
+<h3 id="注意点">注意点</h3>
+<h4 id="对象比较">对象比较</h4>
+<p>包装对象的数值比较，不能简单的使用<code>==</code>，虽然 - 128 到 127 之间的数字可以，但是这个范围之外还是需要使用<code>equals</code>比较。</p>
+<p>前面提到，有些场景会进行自动拆装箱，同时也说过，由于自动拆箱，如果包装类对象为 null，那么自动拆箱时就有可能抛出 NPE。</p>
+<p>如果一个 for 循环中有大量拆装箱操作，会浪费很多资源。</p>
+<h4 id="数据范围溢出">数据范围溢出</h4>
+<pre><code class="language-java">int i = Integer.MAX_VALUE;
+int j = Integer.MAX_VALUE;
 
-  // Assume storage level uses disk; otherwise memory eviction may cause data loss
-  assume(level.useDisk, s&quot;Storage level $level is not appropriate for local checkpointing&quot;)
-
-  // Not all actions compute all partitions of the RDD (e.g. take). For correctness, we
-  // must cache any missing partitions. TODO: avoid running another job here (SPARK-8582).
-  val action = (tc: TaskContext, iterator: Iterator[T]) =&gt; Utils.getIteratorSize(iterator)
-  val missingPartitionIndices = rdd.partitions.map(_.index).filter { i =&gt;
-    !SparkEnv.get.blockManager.master.contains(RDDBlockId(rdd.id, i))
-  }
-  if (missingPartitionIndices.nonEmpty) {
-    rdd.sparkContext.runJob(rdd, action, missingPartitionIndices)
-  }
-
-  new LocalCheckpointRDD[T](rdd)
-}
-.....
+int k = i + j;
+System.out.println(k);
 </code></pre>
-<h4 id="reliablerddcheckpointdata">ReliableRDDCheckpointData</h4>
-<p>这个是写外部文件系统的 Checkpoint 类。</p>
-<pre><code class="language-scala">......
-/**
- * Materialize this RDD and write its content to a reliable DFS.
- * This is called immediately after the first action invoked on this RDD has completed.
- */
-protected override def doCheckpoint(): CheckpointRDD[T] = {
-  val newRDD = ReliableCheckpointRDD.writeRDDToCheckpointDirectory(rdd, cpDir)
-
-  // Optionally clean our checkpoint files if the reference is out of scope
-  if (rdd.conf.getBoolean(&quot;spark.cleaner.referenceTracking.cleanCheckpoints&quot;, false)) {
-    rdd.context.cleaner.foreach { cleaner =&gt;
-      cleaner.registerRDDCheckpointDataForCleanup(newRDD, rdd.id)
-    }
-  }
-
-  logInfo(s&quot;Done checkpointing RDD ${rdd.id} to $cpDir, new parent is RDD ${newRDD.id}&quot;)
-  newRDD
-}
-......
-</code></pre>
-<p>可以看到核心方法是通过 <code>ReliableCheckpointRDD.writeRDDToCheckpointDirectory()</code> 来写 <code>newRDD</code>。这个方法就不进去看了，代码逻辑非常清晰，同样是起一个 Spark 任务把 RDD 生成之后按 Partition 来写到文件系统中。</p>
-<h3 id="目录">目录</h3>
-<p>Rdd</p>
-<pre><code class="language-scala">checkpointDir/
-|--	uuid_dir
-|		|--part1
-|--	|--part2
-</code></pre>
-<p>DStream</p>
-<pre><code class="language-scala">checkpointDir/
-|-- 6f53f0dd-9461-4ca5-b42c-127739e0853f RDD checkpoint数据
-|		|-- rdd-924
-|		|		|-- part1
-|		|		|-- part2
-|		|-- rdd-929
-|--	receivedBlockMetadata WAL receiver block 元数据
-|		|-- log-1597377346017-1597377406017
-|		|-- log-1597377410005-1597377470005
-|-- receivedData WAL data
-|   |-- 0(streamid)
-|   |   |-- log-starttime0-endtime0
-|   |   |-- log-starttime1-endtime1
-|   |   |-- log-1597378278202-1597378338202
-|   |-- streamId1
-|   |-- streamId2
-|-- .checkpoint-1597378750000.bk.crc
-|-- .checkpoint-1597378750000.crc
-|-- checkpoint-1597378710000 metadata、data checkpoint(以wordcount为例，看到checkpoint文件大小随着需要保存的状态变多而变大，所以除了元数据也保存了最后合并后的数据本身)
-|-- checkpoint-1597378710000.bk 
-</code></pre>
+<p>结果：-2</p>
+<p>**这就是发生了溢出，溢出的时候并不会抛异常，也没有任何提示。**所以，在程序中，使用同类型的数据进行运算的时候，<strong>一定要注意数据溢出的问题。</strong></p>
+<h4 id="gc压力">GC压力</h4>
+<p>因为自动装箱会隐式地创建对象，像前面提到的那样，如果在一个循环体中，会创建无用的中间对象，这样会增加GC压力，拉低程序的性能。</p>
 ]]></content>
     </entry>
 </feed>
